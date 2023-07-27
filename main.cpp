@@ -1,4 +1,3 @@
-
 /* Includes */
 #include "mbed.h"
 #include "HTS221Sensor.h"
@@ -15,8 +14,8 @@ static LSM6DSLSensor acc_gyro(&devI2c,0xD4,D4,D5); // high address
 static LIS3MDL magnetometer(&devI2c, 0x3C);
 static DigitalOut shutdown_pin(PC_6);
 static VL53L0X range(&devI2c, &shutdown_pin, PC_7, 0x52);
-
-
+static UnbufferedSerial pc(USBTX, USBRX);
+char inp_char = 0;
 // functions to print sensor data
 void print_t_rh(){
     float value1, value2;
@@ -57,7 +56,9 @@ void print_distance(){
         printf("VL53L0X [mm]:                --\r\n");
     }
 }
-
+void pc_interrupt(){
+pc.read(&inp_char, 1);
+}
 /* Simple main function */
 int main() {
     uint8_t id;
@@ -100,7 +101,32 @@ int main() {
     print_distance();
     printf("\r\n");
     
+    pc.attach(&pc_interrupt);
     while(1) {
+        switch(inp_char){
+            case 't':
+            print_t_rh();
+            inp_char = 0;
+            break;
+            case 'm':
+            print_mag();
+            inp_char = 0;
+            break;
+            case 'a':
+            print_accel();
+            inp_char = 0;
+            break;
+            case 'g':
+            print_gyro();
+            inp_char = 0;
+            break;
+            case 'd':
+            print_distance();
+            inp_char = 0;
+            break;
+            default:
+            break;
+        }
         wait_us(500000);
     }
 }
